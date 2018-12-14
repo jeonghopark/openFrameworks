@@ -148,6 +148,18 @@ void ofxiOSImagePicker::saveImage()
 	[imagePicker saveImageToPhotoAlbum];
 }
 
+
+//----------------------------------------------------------------
+void ofxiOSImagePicker::saveImageFromPixel(int width, int height, int pixelForChannel, unsigned char pixels[])
+{
+    CGDataProviderRef provider = CGDataProviderCreateWithData(NULL, pixels, width*height*pixelForChannel, NULL);
+    CGImageRef imageRef = CGImageCreate(width, height, 8, 32, pixelForChannel*width, CGColorSpaceCreateDeviceRGB(), kCGBitmapByteOrderDefault, provider, NULL, NO, kCGRenderingIntentDefault);
+    NSData *imageData = UIImagePNGRepresentation([UIImage imageWithCGImage:imageRef]);
+    UIImage *output = [UIImage imageWithData:imageData];
+    UIImageWriteToSavedPhotosAlbum(output,nil,nil,nil);
+}
+
+
 //----------------------------------------------------------------
 unsigned char * ofxiOSImagePicker::getPixels(){
     return pixels.getData();

@@ -112,7 +112,9 @@ public:
 	int getOrientation();
 	
 	void saveImage(); //this doesn't quite work right now and i'm not sure why.
-	
+
+    void saveImageFromPixel(int width, int height, int pixelForChannel, unsigned char pixels[]);
+
 	void takePicture();
 	
 	void loadPixels(); //never call this. this is called by the obj-c class.
