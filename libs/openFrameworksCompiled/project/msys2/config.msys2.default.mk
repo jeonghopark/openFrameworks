@@ -38,6 +38,7 @@ endif
 FIND ?= /usr/bin/find
 PLATFORM_AR = $(MINGW_PREFIX)/bin/ar
 PLATFORM_LD = $(MINGW_PREFIX)/bin/ld
+PLATFORM_RESOURCE_COMPILER = $(MINGW_PREFIX)/bin/windres
 PLATFORM_PKG_CONFIG = $(MINGW_PREFIX)/bin/pkg-config
 
 
@@ -46,12 +47,6 @@ PLATFORM_PROJECT_RELEASE_BIN_NAME=$(APPNAME).exe
 PLATFORM_PROJECT_RELEASE_TARGET = bin/$(PLATFORM_PROJECT_RELEASE_BIN_NAME)
 PLATFORM_PROJECT_DEBUG_TARGET = bin/$(PLATFORM_PROJECT_DEBUG_BIN_NAME)
 PLATFORM_RUN_COMMAND = cd bin;./$(BIN_NAME)
-ifneq ("$(wildcard $(PLATFORM_PROJECT_RELEASE_TARGET))","")
-	PLATFORM_PROJECT_EXISTING_TARGET=$(PLATFORM_PROJECT_RELEASE_TARGET)
-else
-	PLATFORM_PROJECT_EXISTING_TARGET=$(PLATFORM_PROJECT_DEBUG_TARGET)
-endif
-
 
 ##########################################################################################
 # PLATFORM DEFINES
@@ -303,10 +298,18 @@ PLATFORM_LIBRARY_SEARCH_PATHS =
 ################################################################################
 #PLATFORM_CC=
 
+################################################################################
+# PLATFORM ICON
+#    If not set by the project by PROJECT_(RELEASE|DEBUG)_ICON, use OF defaults
+################################################################################
+PLATFORM_RELEASE_ICON = $(OF_PLATFORM_MAKEFILES)/icon.ico
+PLATFORM_DEBUG_ICON = $(OF_PLATFORM_MAKEFILES)/icon-debug.ico
+
 copy_dlls:
 	@echo "     copying dlls to bin"
 
-	@ntldd --recursive $(PLATFORM_PROJECT_EXISTING_TARGET) | grep -F "mingw32" | cut -d">" -f2 |cut -d" " -f2 >dlllist
+	@ntldd --recursive $(wildcard bin/$(APPNAME)*.exe) | sed -e 's:\\:/:g' | grep -F "$(MINGW_PREFIX)" | cut -d">" -f2 |cut -d" " -f2 >dlllist
+	
 	@while read -r dll; do \
 		test -e "$$dll" && cp "$$dll" ./bin; \
     done <dlllist
