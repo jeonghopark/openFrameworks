@@ -20,17 +20,17 @@ void ofApp::setup() {
 	float radius = 1000;
 	for(int i = 0; i<num; i++ ) {
 		
-		float theta1 = ofRandom(0, TWO_PI);
-		float theta2 = ofRandom(0, TWO_PI);
+		float theta1 = ofRandom(0, glm::two_pi<float>());
+		float theta2 = ofRandom(0, glm::two_pi<float>());
 		
 		glm::vec3 p;
-		p.x = cos( theta1 ) * cos( theta2 );
-		p.y = sin( theta1 );
-		p.z = cos( theta1 ) * sin( theta2 );
+		p.x = std::cos( theta1 ) * std::cos( theta2 );
+		p.y = std::sin( theta1 );
+		p.z = std::cos( theta1 ) * std::sin( theta2 );
 		p *= radius;
 		
 		addPoint(p.x, p.y, p.z);
-    
+	
 	}
 	
 	// upload the data to the vbo
@@ -41,10 +41,10 @@ void ofApp::setup() {
 	
 	// load the shader
 	#ifdef TARGET_OPENGLES
-        shader.load("shaders_gles/shader");
+		shader.load("shaders_gles/shader");
 	#else
-        shader.load("shaders/shader"); 
-        #endif
+		shader.load("shaders/shader"); 
+		#endif
 
 }
 
@@ -137,12 +137,12 @@ void ofApp::keyPressed(int key) {
 	
 	// add crazy amount
 	if(key == 'a') {
-		float theta1 = ofRandom(0, TWO_PI);
-		float theta2 = ofRandom(0, TWO_PI);
+		float theta1 = ofRandom(0, glm::two_pi<float>());
+		float theta2 = ofRandom(0, glm::two_pi<float>());
 		glm::vec3 p;
-		p.x = cos( theta1 ) * cos( theta2 );
-		p.y = sin( theta1 );
-		p.z = cos( theta1 ) * sin( theta2 );
+		p.x = std::cos( theta1 ) * std::cos( theta2 );
+		p.y = std::sin( theta1 );
+		p.z = std::cos( theta1 ) * std::sin( theta2 );
 		p  *= 800;
 		addPoint(p.x, p.y, p.z);
 		int total = (int)points.size();

@@ -13,7 +13,7 @@
 #include "ofAppRunner.h"
 #include "ofLog.h"
 
-using namespace std;
+using std::string;
 
 //C++ class implementations
 
@@ -34,7 +34,6 @@ ofxiOSKeyboard::ofxiOSKeyboard(int _x, int _y, int _w, int _h)
 //--------------------------------------------------------------
 ofxiOSKeyboard::~ofxiOSKeyboard()
 {
-	[keyboard release];
 }
 
 
@@ -192,7 +191,7 @@ UITextField * ofxiOSKeyboard::getKeyboardTextField() {
 }
 
 //--------------------------------------------------------------
-- (id) init:(int)x y:(int)y width:(int)w height:(int)h
+- (instancetype) init:(int)x y:(int)y width:(int)w height:(int)h
 {
 	if(self = [super init])
 	{			
@@ -288,8 +287,7 @@ UITextField * ofxiOSKeyboard::getKeyboardTextField() {
 
 //--------------------------------------------------------------
 - (void)dealloc {
-	[_textField release];
-	[super dealloc];
+    _textField = nil;
 }
 
 //--------------------------------------------------------------
@@ -372,7 +370,7 @@ UITextField * ofxiOSKeyboard::getKeyboardTextField() {
         switch (ofGetOrientation())
         {
             case OF_ORIENTATION_90_LEFT:
-                _textField.transform = CGAffineTransformMakeRotation(M_PI_2);
+                _textField.transform = CGAffineTransformMakeRotation(glm::half_pi<float>());
                 x = rect.origin.y-rect.size.height;
                 y = s.height-rect.size.width-rect.origin.x;
                 w = rect.size.height;
@@ -380,7 +378,7 @@ UITextField * ofxiOSKeyboard::getKeyboardTextField() {
                 break;
                 
             case OF_ORIENTATION_90_RIGHT:
-                _textField.transform = CGAffineTransformMakeRotation(-M_PI_2);
+                _textField.transform = CGAffineTransformMakeRotation(-glm::half_pi<float>());
                 x = s.width-rect.origin.y;
                 y = rect.origin.x;
                 w = rect.size.height;
@@ -388,7 +386,7 @@ UITextField * ofxiOSKeyboard::getKeyboardTextField() {
                 break;
                 
             case OF_ORIENTATION_180:
-                _textField.transform = CGAffineTransformMakeRotation(M_PI);
+                _textField.transform = CGAffineTransformMakeRotation(glm::pi<float>());
                 x = rect.origin.x;
                 y = rect.origin.y-rect.size.height;
                 w = rect.size.width;
@@ -421,7 +419,7 @@ UITextField * ofxiOSKeyboard::getKeyboardTextField() {
 //--------------------------------------------------------------
 - (BOOL)textField:(UITextField *)textField shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString *)string
 {
-    NSMutableString *newValue = [[textField.text mutableCopy] autorelease];
+    NSMutableString *newValue = [textField.text mutableCopy];
     [newValue replaceCharactersInRange:range withString:string];
 	
 	ofLogVerbose("ofxiOSKeyboard") << "shouldChangeCharactersInRange: " << [newValue length] << " " << fieldLength;

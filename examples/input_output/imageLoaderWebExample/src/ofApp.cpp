@@ -12,7 +12,7 @@ void ofApp::setup(){
 
 //--------------------------------------------------------------
 void ofApp::urlResponse(ofHttpResponse & response){
-	if(response.status==200 && response.request.name == "tsingy_forest"){
+	if(response.status==200 && response.request.name == "about"){
 		img.load(response.data);
 		loading=false;
 	}else{
@@ -29,7 +29,7 @@ void ofApp::update(){
 //--------------------------------------------------------------
 void ofApp::draw(){
 	
-    ofSetColor(220);
+	ofSetColor(220);
 	ofDrawBitmapString("hit spacebar to load image from web", 10, ofGetHeight()-20);
 	if(loading)
 		ofDrawBitmapString("loading...", 10, ofGetHeight()+20);

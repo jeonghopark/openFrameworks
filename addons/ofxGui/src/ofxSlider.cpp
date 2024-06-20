@@ -1,6 +1,7 @@
 #include "ofxSlider.h"
 #include "ofGraphics.h"
-using namespace std;
+
+using std::string;
 
 namespace{
 	template<typename Type>
@@ -376,4 +377,8 @@ template class ofxSlider<uint64_t>;
 template class ofxSlider<float>;
 template class ofxSlider<double>;
 
-template class ofxSlider<typename std::conditional<std::is_same<uint32_t, size_t>::value || std::is_same<uint64_t, size_t>::value, bool, size_t>::type>;
+//for some reason osx errors if this isn't defined 
+#if defined TARGET_OSX || defined TARGET_EMSCRIPTEN
+	template class ofxSlider<typename std::conditional<std::is_same<uint32_t, size_t>::value || std::is_same<uint64_t, size_t>::value, bool, size_t>::type>;
+#endif
+

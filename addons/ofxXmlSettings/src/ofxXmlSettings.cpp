@@ -4,6 +4,9 @@
 #include <string>
 #include <iostream>
 
+using std::string;
+using std::vector;
+
 // this increases the accuracy of ofToString() when saving floating point values
 // but in the process of setting it also causes very small values to be ignored.
 const float floatPrecision = 9;
@@ -28,7 +31,6 @@ static vector<string> tokenize(const string & str, const string & delim)
   }
   return tokens;
 }
-//----------------------------------------
 
 //----------------------------------------
 ofxXmlSettings::ofxXmlSettings():
@@ -48,7 +50,7 @@ ofxXmlSettings::ofxXmlSettings(const string& xmlFile):
 	//we do this so that we have a valid handle
 	//without the need for loadFile
 	storedHandle   = TiXmlHandle(&doc);
-	loadFile(xmlFile);
+	load(xmlFile);
 }
 
 //---------------------------------------------------------
@@ -72,11 +74,9 @@ void ofxXmlSettings::clear(){
 }
 
 //---------------------------------------------------------
-bool ofxXmlSettings::loadFile(const string& xmlFile){
-
-	string fullXmlFile = ofToDataPath(xmlFile);
-
-	bool loadOkay = doc.LoadFile(fullXmlFile);
+bool ofxXmlSettings::load(const string& xmlFile){
+	auto fullXmlFile = ofToDataPath(xmlFile);
+	bool loadOkay = doc.LoadFile(fullXmlFile.c_str());
 
 	//theo removed bool check as it would
 	//return false if the file exists but was
@@ -90,25 +90,24 @@ bool ofxXmlSettings::loadFile(const string& xmlFile){
 }
 
 //---------------------------------------------------------
-bool ofxXmlSettings::saveFile(const string& xmlFile){
-
-	string fullXmlFile = ofToDataPath(xmlFile);
-	return doc.SaveFile(fullXmlFile);
+bool ofxXmlSettings::save(const string& xmlFile){
+	auto fullXmlFile = ofToDataPath(xmlFile);
+	return doc.SaveFile(fullXmlFile.c_str());
 }
 
 //---------------------------------------------------------
-bool ofxXmlSettings::saveFile(){
+bool ofxXmlSettings::save(){
 	return doc.SaveFile();
 }
 
 //---------------------------------------------------------
-bool ofxXmlSettings::load(const string & path){
-	return loadFile(path);
+bool ofxXmlSettings::loadFile(const string & path){
+	return load(path);
 }
 
 //---------------------------------------------------------
-bool ofxXmlSettings::save(const string & path){
-	return saveFile(path);
+bool ofxXmlSettings::saveFile(const string & path){
+	return save(path);
 }
 
 //---------------------------------------------------------

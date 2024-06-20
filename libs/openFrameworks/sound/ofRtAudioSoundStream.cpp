@@ -1,11 +1,11 @@
 #include "ofRtAudioSoundStream.h"
-#include "ofMath.h"
 #include "ofUtils.h"
 #include "ofAppRunner.h"
 #include "ofLog.h"
-#include "RtAudio.h"
+#include <RtAudio.h>
 
-using namespace std;
+using std::vector;
+using std::shared_ptr;
 
 //------------------------------------------------------------------------------
 RtAudio::Api toRtAudio(ofSoundDevice::Api api){

@@ -25,14 +25,11 @@
 
 @implementation ofxiOSViewController
 
-@synthesize glView;
-
-- (id)initWithFrame:(CGRect)frame app:(ofxiOSApp *)app {
-    [self initWithFrame:frame app:app sharegroup:nil];
-    return self;
+- (instancetype)initWithFrame:(CGRect)frame app:(ofxiOSApp *)app {
+    return [self initWithFrame:frame app:app sharegroup:nil];
 }
 
-- (id)initWithFrame:(CGRect)frame app:(ofxiOSApp *)app sharegroup:(EAGLSharegroup *)sharegroup{
+- (instancetype)initWithFrame:(CGRect)frame app:(ofxiOSApp *)app sharegroup:(EAGLSharegroup *)sharegroup{
     currentInterfaceOrientation = pendingInterfaceOrientation = UIInterfaceOrientationPortrait;
     if((self = [super init])) {
         currentInterfaceOrientation = pendingInterfaceOrientation = self.interfaceOrientation;
@@ -43,7 +40,7 @@
         }
         bFirstUpdate    = NO;
         bAnimated       = NO;
-        self.glView = [[[ofxiOSEAGLView alloc] initWithFrame:frame andApp:app sharegroup:sharegroup] autorelease];
+        self.glView = [[ofxiOSEAGLView alloc] initWithFrame:frame andApp:app sharegroup:sharegroup];
         
         [self.glView setMultipleTouchEnabled:ofxiOSGetOFWindow()->isMultiTouch()];
         self.glView.delegate = self;
@@ -57,8 +54,6 @@
     [self.glView removeFromSuperview];
     self.glView.delegate = nil;
     self.glView = nil;
-    
-    [super dealloc];
 }
 
 - (void)viewDidLoad {
@@ -132,11 +127,11 @@
     if (interfaceOrientation == UIInterfaceOrientationPortrait) {
         return 0;           // 0 degrees.
     } else if (interfaceOrientation == UIInterfaceOrientationLandscapeRight) {
-        return M_PI * 0.5;  // 90 degrees.
+        return glm::half_pi<float>();  // 90 degrees.
     } else if (interfaceOrientation == UIInterfaceOrientationPortraitUpsideDown) {
-        return M_PI;        // 180 degrees.
+        return glm::pi<float>();        // 180 degrees.
     } else if (interfaceOrientation == UIInterfaceOrientationLandscapeLeft) {
-        return M_PI * 1.5;  // 270 degrees.
+        return glm::pi<float>() + glm::half_pi<float>();  // 270 degrees.
     } else {
         return 0;
     }

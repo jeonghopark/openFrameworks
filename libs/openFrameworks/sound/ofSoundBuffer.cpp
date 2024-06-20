@@ -8,10 +8,15 @@
 #include "ofSoundBuffer.h"
 #include "ofSoundUtils.h"
 #include "ofLog.h"
+#include "ofMath.h"
+#define GLM_FORCE_CTOR_INIT
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/trigonometric.hpp>
 #include <limits>
-#include "glm/trigonometric.hpp"
 
-using namespace std;
+using std::vector;
+using std::string;
+
 
 #if !defined(TARGET_ANDROID) && !defined(TARGET_IPHONE) && !defined(TARGET_LINUX_ARM)
 ofSoundBuffer::InterpolationAlgorithm ofSoundBuffer::defaultAlgorithm = ofSoundBuffer::Hermite;
@@ -39,7 +44,7 @@ void ofSoundBuffer::copyFrom(const short * shortBuffer, std::size_t numFrames, s
 	setSampleRate(_sampleRate);
 	buffer.resize(numFrames * numChannels);
 	for(std::size_t i = 0; i < size(); i++){
-		buffer[i] = shortBuffer[i]/float(numeric_limits<short>::max());
+		buffer[i] = shortBuffer[i]/float(std::numeric_limits<short>::max());
 	}
 	checkSizeAndChannelsConsistency("copyFrom");
 }
@@ -62,13 +67,13 @@ void ofSoundBuffer::copyFrom(const vector<float> & floatBuffer, std::size_t numC
 void ofSoundBuffer::toShortPCM(vector<short> & dst) const{
 	dst.resize(size());
 	for(std::size_t i = 0; i < size(); i++){
-		dst[i] = buffer[i]*float(numeric_limits<short>::max());
+		dst[i] = buffer[i]*float(std::numeric_limits<short>::max());
 	}
 }
 
 void ofSoundBuffer::toShortPCM(short * dst) const{
 	for(std::size_t i = 0; i < size(); i++){
-		dst[i] = buffer[i]*float(numeric_limits<short>::max());
+		dst[i] = buffer[i]*float(std::numeric_limits<short>::max());
 	}
 }
 
@@ -351,7 +356,7 @@ void ofSoundBuffer::linearResampleTo(ofSoundBuffer &outBuffer, std::size_t fromF
 	}else if(fromFrame+2>inFrames){
 		to = 0;
 	}else{
-		to = ceil(float(inFrames-2-fromFrame)/speed);
+		to = std::ceil(float(inFrames-2-fromFrame)/speed);
 	}
 	
 	float remainder = position - intPosition;
@@ -535,7 +540,7 @@ float ofSoundBuffer::getRMSAmplitude() const {
 	for(size_t i = 0; i < buffer.size(); i++){
 		acc += buffer[i] * buffer[i];
 	}
-	return sqrt(acc / (double)buffer.size());
+	return std::sqrt(acc / (double)buffer.size());
 }
 
 float ofSoundBuffer::getRMSAmplitudeChannel(std::size_t channel) const {
@@ -548,13 +553,13 @@ float ofSoundBuffer::getRMSAmplitudeChannel(std::size_t channel) const {
 		float sample = getSample(i, channel);
 		acc += sample * sample;
 	}
-	return sqrt(acc / (double)getNumFrames());
+	return std::sqrt(acc / (double)getNumFrames());
 }
 
 void ofSoundBuffer::normalize(float level){
 	float maxAmplitude = 0;
 	for(std::size_t i = 0; i < size(); i++) {
-		maxAmplitude = max(maxAmplitude, abs(buffer[i]));
+		maxAmplitude = std::max(maxAmplitude, std::abs(buffer[i]));
 	}
 	float normalizationFactor = level/maxAmplitude;
 	for(std::size_t i = 0; i < size(); i++) {
@@ -571,7 +576,7 @@ bool ofSoundBuffer::trimSilence(float threshold, bool trimStart, bool trimEnd) {
 	std::size_t lastNonSilence = buffer.size() - 1;
 	if(trimStart) {
 		for(std::size_t i = 0; i < buffer.size(); ++i) {
-			if(abs(buffer[i]) > threshold) {
+			if(std::abs(buffer[i]) > threshold) {
 				firstNonSilence = i;
 				break;
 			}
@@ -579,7 +584,7 @@ bool ofSoundBuffer::trimSilence(float threshold, bool trimStart, bool trimEnd) {
 	}
 	if(trimEnd) {
 		for(std::size_t i = lastNonSilence; i > firstNonSilence; --i) {
-			if(abs(buffer[i]) > threshold) {
+			if(std::abs(buffer[i]) > threshold) {
 				lastNonSilence = i;
 				break;
 			}

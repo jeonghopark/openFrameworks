@@ -163,8 +163,10 @@ void ofxiOSUnlockGLContext();
 void ofxiOSEnableLoopInThread();
 
 #if TARGET_OS_IOS || (TARGET_OS_IPHONE && !TARGET_OS_TV)
-OF_DEPRECATED_MSG("ofxiOSSetOrientation is deprecated, use ofSetOrientation instead.", void ofxiOSSetOrientation(ofOrientation orientation));
-OF_DEPRECATED_MSG("ofxiOSGetOrientation is deprecated, use ofGetOrientation instead.", UIDeviceOrientation ofxiOSGetOrientation());
+[[deprecated("use ofSetOrientation")]]
+void ofxiOSSetOrientation(ofOrientation orientation);
+[[deprecated("use ofGetOrientation")]]
+UIDeviceOrientation ofxiOSGetOrientation();
 #endif
 
 // load an image from the app bundle into a texture
@@ -190,6 +192,15 @@ bool ofxiOSUIImageToOFTexture(UIImage * uiImage, ofTexture & outTexture, int tar
 bool ofxiOSCGImageToPixels(CGImageRef & ref, unsigned char * pixels);
 
 #if TARGET_OS_IOS || (TARGET_OS_IPHONE && !TARGET_OS_TV)
+
+/// TODO: define protocol for ofxiOSScreenGrab, and give protocol explicitly for argument of ofxiOSScreenGrab
+//@protocol ofxiOSSaveDelegate <NSObject>
+//
+//@optional
+//- (void)saveComplete;
+//
+//@end
+
 // save current opengl screen to photos app
 // based on code from http://www.bit-101.com/blog/?p=1861
 void ofxiOSScreenGrab(id delegate);
