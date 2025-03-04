@@ -6,6 +6,8 @@ ARCH=""
 OVERWRITE=1
 SILENT_ARGS=""
 BLEEDING_EDGE=0
+DL_VERSION=2.8.0
+TAG=""
 
 printHelp(){
 cat << EOF
@@ -14,10 +16,11 @@ cat << EOF
     Options:
 
     -v, --version VERSION       OF version to download the libraries for. Defaults to master
-    -p, --platform PLATFORM     Platorm among: android, emscritpen, ios, linux, linux64, linuxarmv6l, linuxarmv7l, msys2, osx, tvos, vs
+    -p, --platform PLATFORM     Platform among: android, emscripten, ios, linux, linux64, linuxarmv6l, linuxarmv7l, msys2, osx, tvos, vs
                                 If not specified tries to autodetect the platform
     -s, --silent                Silent download progress
     -h, --help                  Shows this message
+    -t, --tag                   tag release for libraries
 EOF
 }
 
@@ -27,14 +30,18 @@ if [[ ! -d "$SCRIPT_DIR" ]]; then SCRIPT_DIR="$PWD"; fi
 
 download(){
     echo "Downloading $1"
-    
+
+    REPO="nightly"
     if [[ $BLEEDING_EDGE = 1 ]] ; then
-        echo downloader https://github.com/openframeworks/projectGenerator/releases/download/bleeding/$1 $SILENT_ARGS
-        downloader https://github.com/openframeworks/projectGenerator/releases/download/bleeding/$1 $SILENT_ARGS
-    else
-        echo downloader https://github.com/openframeworks/projectGenerator/releases/download/nightly/$1
-        downloader https://github.com/openframeworks/projectGenerator/releases/download/nightly/$1 
+        REPO="latest"
     fi
+    if [[ $TAG != "" ]] ; then
+        REPO="$TAG"
+    fi
+
+    echo downloader https://github.com/openframeworks/projectGenerator/releases/download/$REPO/$1
+    downloader https://github.com/openframeworks/projectGenerator/releases/download/$REPO/$1
+
 }
 
 # trap any script errors and exit
@@ -88,6 +95,10 @@ while [[ $# -gt 0 ]]; do
         printHelp
         exit 0
         ;;
+        -t|--tag)
+        TAG="$2"
+        shift # past argument
+        ;;
         *)
         echo "Error: invalid argument: $key"
         printHelp
@@ -103,10 +114,9 @@ if [ "$PLATFORM" == "" ]; then
         PLATFORM="linux"
     elif [ "$OS" == "Darwin" ]; then
         PLATFORM="osx"
-    elif [ "${OS:0:5}" == "MINGW" ]; then
+    elif [[ "$OS" =~ "MINGW" ]] || [[ "$OS" =~ "MSYS" ]]; then
         PLATFORM="msys2"
     else
-        # otherwise we are on windows and will download vs
         PLATFORM="vs"
     fi
 fi
@@ -115,53 +125,48 @@ if [ "$ARCH" == "" ]; then
     if [ "$PLATFORM" == "linux" ]; then
         ARCH=$(uname -m)
         if [ "$ARCH" == "x86_64" ]; then
-            GCC_VERSION=$(gcc -dumpversion | cut -f1 -d.)
-            if [ $GCC_VERSION -eq 4 ]; then
-                ARCH=64gcc6
-            elif [ $GCC_VERSION -eq 5 ]; then
-                ARCH=64gcc6
-            else
-                ARCH=64gcc6
-            fi
+            ARCH=x86_64
         elif [ "$ARCH" == "armv7l" ]; then
-            # Check for Raspberry Pi
-            if [ -f /opt/vc/include/bcm_host.h ]; then
-                ARCH=armv6l
-            fi
-        elif [ "$ARCH" == "i686" ] || [ "$ARCH" == "i386" ]; then
-            cat << EOF
-32bit linux is not officially supported anymore but compiling
-the libraries using the build script in apothecary/scripts
-should compile all the dependencies without problem
-EOF
-            exit 1
+            ARCH=armv7l
+        elif [[ "$ARCH" == "aarch64" ]] || [[ "$ARCH" == "arm64" ]]; then
+            ARCH=arm64
+        else
+            ARCH=unknown
         fi
     elif [ "$PLATFORM" == "msys2" ]; then
-        if [ "$MSYSTEM" == "MINGW64" ]; then
-            ARCH=mingw64
-        elif [ "$MSYSTEM" == "MINGW32" ]; then
-            ARCH=mingw32
-        elif [ "$MSYSTEM" == "UCRT64" ]; then
-            ARCH=ucrt64
-        elif [ "$MSYSTEM" == "CLANG64" ]; then
-            ARCH=clang64
+        ARCH=universal
+    elif [ "$PLATFORM" == "vs" ]; then
+        ARCH=$(uname -m)
+        if [ "$ARCH" == "x86_64" ]; then
+            ARCH=64
+        elif [[ "$ARCH" == "aarch64" ]] || [[ "$ARCH" == "arm64" ]]; then
+            ARCH=arm64
+        else
+            ARCH=universal
+        fi
+    elif [[ "$PLATFORM" == "osx" ]] || [[ "$PLATFORM" == "macos" ]]; then
+        ARCH=$(uname -m)
+        if [ "$ARCH" == "x86_64" ]; then
+            ARCH=64
+        elif [[ "$ARCH" == "aarch64" ]] || [[ "$ARCH" == "arm64" ]]; then
+            ARCH=arm64
+        else
+            ARCH=universal
         fi
     fi
-
-    if [ "$PLATFORM" == "osx" ]; then
-        ARCH=x86_64
-    fi
 fi
-
 
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$SCRIPT_DIR"
 
 OUTDIR=../../
 
-
 if [[ $BLEEDING_EDGE = 1 ]] ; then
-    VER=bleeding
+    VER=latest
+fi
+
+if [[ $TAG != "" ]] ; then
+    VER="$TAG"
 fi
 
 if [ "$PLATFORM" == "vs" ]; then
@@ -169,14 +174,13 @@ if [ "$PLATFORM" == "vs" ]; then
 else
     EXT=".app"
 fi
-OUTPUT=projectGenerator-$PLATFORM
+OUTPUT=projectGenerator
 if [ "$PLATFORM" == "msys2" ] || [ "$PLATFORM" == "vs" ]; then
     GUI="-gui"
 else
     GUI=""
 fi
 PKG="projectGenerator-${PLATFORM}${GUI}.zip"
-
 
 echo " openFrameworks download_pg.sh"
 
@@ -187,44 +191,48 @@ cd libs
 mkdir -p download
 cd download
 
-
 download $PKG
 
-echo " Uncompressing Project Generator for [$PLATFORM] from [$PKG] to [${OUTDIR}/$OUTPUT]"
-if [ "$PLATFORM" == "msys2" ] || [ "$PLATFORM" == "vs" ]; then
-    unzip -q "$PKG" -d "$OUTPUT"
-    #rm $PKG
-else
-    tar xjf "$PKG"
-    #rm $PKG
-fi
-
 if [ -d "${OUTDIR}/${OUTPUT}" ] || [ -f "${OUTDIR}/${OUTPUT}" ]; then
-        rm -rf "${OUTDIR}/${OUTPUT}"
+    rm -rf "${OUTDIR}/${OUTPUT}"
+fi
+
+echo " Uncompressing Project Generator for [$PLATFORM] from [$PKG] to [${OUTDIR}/${OUTPUT}]"
+if [ "$PLATFORM" == "msys2" ] || [ "$PLATFORM" == "vs" ]; then
+    unzip -q "$PKG" -d "${OUTDIR}/${OUTPUT}"
+    #rm $PKG
+else
+    mkdir -p "${OUTDIR}${OUTPUT}"
+    tar xjf "$PKG" -C "${OUTDIR}${OUTPUT}"
+    mv "${OUTDIR}/${OUTPUT}/projectGenerator-osx/projectGenerator$EXT" "${OUTDIR}/${OUTPUT}/projectGenerator$EXT"
+    rm -rf "${OUTDIR}/${OUTPUT}/projectGenerator-osx/"
 fi
 
 if [ "$PLATFORM" == "msys2" ] || [ "$PLATFORM" == "vs" ]; then
-
-    if ! command -v rsync &> /dev/null
-    then      
-        cp -arX ${OUTPUT}/ ${OUTDIR}/${OUTPUT}
+    if ! command -v rsync &> /dev/null; then      
+        cp -ar "${OUTDIR}/${OUTPUT}/resources/app/app/projectGenerator.exe" "${OUTDIR}/${OUTPUT}/projectGeneratorCmd.exe"
     else
-        rsync -a ${OUTPUT}/ ${OUTDIR}/${OUTPUT}
+        rsync -avzp "${OUTDIR}/${OUTPUT}/resources/app/app/projectGenerator.exe" "${OUTDIR}/${OUTPUT}/projectGeneratorCmd.exe"
     fi
-    rm -rf $OUTPUT
+    # if command -v chmod &> /dev/null; then
+        chmod +x "${OUTDIR}/${OUTPUT}/projectGeneratorCmd.exe"
+        chmod +x "${OUTDIR}/${OUTPUT}/resources/app/app/projectGenerator.exe"
+    # else
+    #     echo "Warning: chmod command not found, skipping permission adjustment."
+    # fi
 else
-    if ! command -v rsync &> /dev/null
-    then      
-        cp -arX $OUTPUT/projectGenerator$EXT $OUTDIR/
+    if ! command -v rsync &> /dev/null; then      
+        cp -arX "${OUTDIR}/${OUTPUT}/projectGenerator$EXT/Contents/Resources/app/app/projectGenerator" "${OUTDIR}/${OUTPUT}/projectGenerator"
     else
-        rsync -a $OUTPUT/projectGenerator$EXT $OUTDIR
+        rsync -avzp "${OUTDIR}/${OUTPUT}/projectGenerator$EXT/Contents/Resources/app/app/projectGenerator" "${OUTDIR}/${OUTPUT}/projectGenerator"
     fi
-    rm -rf $OUTPUT/projectGenerator$EXT
-
+    # if command -v chmod &> /dev/null; then
+        chmod +x "${OUTDIR}/${OUTPUT}/projectGenerator"
+        chmod +x "${OUTDIR}/${OUTPUT}/projectGenerator$EXT/Contents/MacOS/projectGenerator"
+    # else
+    #     echo "Warning: chmod command not found, skipping permission adjustment."
+    # fi
 fi
-
-rm -rf $OUTPUT
-# rm -rf $PKG
 
 echo " ------ "
 echo " openFrameworks download projectGenerator and install complete!"

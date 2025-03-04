@@ -3,9 +3,11 @@
 #include "ofConstants.h"
 #include "ofGraphicsBaseTypes.h"
 
-#define GLM_FORCE_CTOR_INIT
-#define GLM_ENABLE_EXPERIMENTAL
-#include <glm/fwd.hpp>
+#include <glm/detail/qualifier.hpp>
+namespace glm {
+	typedef vec<2, float, defaultp>		vec2;
+	typedef vec<3, float, defaultp>		vec3;
+}
 
 class ofVec3f;
 class ofVec2f;
@@ -773,6 +775,17 @@ void ofSetCurveResolution(int res);
 /// }
 /// ~~~~
 void ofSetLineWidth(float lineWidth);
+
+/// \brief Sets the size of the points after mesh.drawVertices() called after.
+/// ~~~~{.cpp}
+/// void ofApp::draw(){
+///     ofSetPointSize(1);          // set point size to 1
+///     mesh.drawVertices(); 		 // draw small points
+///     ofSetPointSize(10);         // set point size to 10
+///     mesh.drawVertices();  		// draw fat points
+/// }
+/// ~~~~
+void ofSetPointSize(float pointSize);
 
 /// \brief Set depth testing on or off to either sort by z-depth (`true`)
 /// or draw order (`false`).

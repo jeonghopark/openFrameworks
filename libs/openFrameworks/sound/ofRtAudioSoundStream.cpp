@@ -1,4 +1,5 @@
 #include "ofRtAudioSoundStream.h"
+#if defined(OF_RTAUDIO)
 #include "ofUtils.h"
 #include "ofAppRunner.h"
 #include "ofLog.h"
@@ -80,9 +81,13 @@ std::vector<ofSoundDevice> ofRtAudioSoundStream::getDeviceList(ofSoundDevice::Ap
 		if(audioTemp.getCurrentApi()!=rtAudioApi && rtAudioApi!=RtAudio::Api::UNSPECIFIED){
 			return deviceList;
 		}
-		auto deviceCount = audioTemp.getDeviceCount();
 		RtAudio::DeviceInfo info;
+#if RTAUDIO_VERSION_MAJOR >= 6
+		for (unsigned int i: audioTemp.getDeviceIds()) {
+#else
+		auto deviceCount = audioTemp.getDeviceCount();
 		for (unsigned int i = 0; i < deviceCount; i++) {
+#endif
 			try {
 				info = audioTemp.getDeviceInfo(i);
 			}
@@ -135,13 +140,17 @@ bool ofRtAudioSoundStream::setup(const ofSoundStreamSettings & settings_)
 
 	try {
 		if (settings.getApi() != ofSoundDevice::Api::UNSPECIFIED) {
+			ofLogNotice() << "Initialing RtAudio Requested API: " << settings.getApi();
 			audio = std::make_shared<RtAudio>(toRtAudio(settings.getApi()));
 		}else{
+			ofLogNotice() << "Initialing RtAudio with UNSPECIFIED API";
 			audio = std::make_shared<RtAudio>();
 		}
+        //needs latest RtAudio - this breaks in slightly older linux 
+		//ofLogNotice() << "Initialized RtAudio with API: " << RtAudio::getApiName(audio->getCurrentApi());
 	}
 	catch (std::exception &error) {
-		ofLogError() << error.what();
+		ofLogError() << "Failed to initialize RtAudio: " << error.what();
 		return false;
 	}
 
@@ -150,6 +159,7 @@ bool ofRtAudioSoundStream::setup(const ofSoundStreamSettings & settings_)
 	if (settings.numInputChannels > 0) {
 		if (!settings.getInDevice()) {
 			ofSoundDevice device;
+			device.api = settings.getApi();
 			device.deviceID = audio->getDefaultInputDevice();
 			settings.setInDevice(device);
 		}
@@ -160,6 +170,7 @@ bool ofRtAudioSoundStream::setup(const ofSoundStreamSettings & settings_)
 	if (settings.numOutputChannels > 0) {
 		if (!settings.getOutDevice()) {
 			ofSoundDevice device;
+			device.api = settings.getApi();
 			device.deviceID = audio->getDefaultOutputDevice();
 			settings.setOutDevice(device);
 		}
@@ -315,3 +326,4 @@ int ofRtAudioSoundStream::rtAudioCallback(void *outputBuffer, void *inputBuffer,
 
 	return 0;
 }
+#endif
